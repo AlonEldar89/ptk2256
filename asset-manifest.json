@@ -1,10 +1,10 @@
 {
   "files": {
-    "main.js": "/ptk2256/static/js/main.cc893271.js",
+    "main.js": "/ptk2256/static/js/main.db11eaf8.js",
     "index.html": "/ptk2256/index.html",
-    "main.cc893271.js.map": "/ptk2256/static/js/main.cc893271.js.map"
+    "main.db11eaf8.js.map": "/ptk2256/static/js/main.db11eaf8.js.map"
   },
   "entrypoints": [
-    "static/js/main.cc893271.js"
+    "static/js/main.db11eaf8.js"
   ]
 }
