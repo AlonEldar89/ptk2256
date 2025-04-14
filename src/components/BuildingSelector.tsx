@@ -52,7 +52,7 @@ const BuildingSelector: React.FC<BuildingSelectorProps> = ({ onBuildingSelect, s
                 }}
               >
                 <img
-                  src={`/images/buildings/building_${building.toLowerCase()}.jpg`}
+                  src={process.env.PUBLIC_URL + `/images/buildings/building_${building.toLowerCase()}.jpg`}
                   alt={`Building ${building}`}
                   style={{
                     width: '100%',

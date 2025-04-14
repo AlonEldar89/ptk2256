@@ -43,7 +43,7 @@ const BuildingAFloorPlan: React.FC<BuildingAFloorPlanProps> = ({
               onClick={() => onApartmentClick(apt)}
             >
               <img
-                src={`/floor-plans/building-a/${apt}.jpg`}
+                src={process.env.PUBLIC_URL + `/floor-plans/building-a/${apt}.jpg`}
                 alt={`Floor plan for ${apt}`}
                 style={{
                   width: '100%',
