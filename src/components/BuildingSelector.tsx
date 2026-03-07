@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
 import { Paper, List, ListItem, ListItemButton, ListItemText, Typography, Box, Grid } from '@mui/material';
-import ProjectOverview from './ProjectOverview';
 
 interface BuildingSelectorProps {
   onBuildingSelect: (building: string) => void;
@@ -52,7 +51,7 @@ const BuildingSelector: React.FC<BuildingSelectorProps> = ({ onBuildingSelect, s
                 }}
               >
                 <img
-                  src={process.env.PUBLIC_URL + `/images/buildings/building_${building.toLowerCase()}.jpg`}
+                  src={`${import.meta.env.BASE_URL}images/buildings/building_${building.toLowerCase()}.jpg`}
                   alt={`Building ${building}`}
                   style={{
                     width: '100%',

@@ -27,7 +27,7 @@ const ProjectOverview: React.FC<ProjectOverviewProps> = ({ visible }) => {
         }}
       >
         <img
-          src={process.env.PUBLIC_URL + "/images/project/overview.jpg"}
+          src={`${import.meta.env.BASE_URL}images/project/overview.jpg`}
           alt="Project Overview"
           style={{
             width: '100%',
