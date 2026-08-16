@@ -1,0 +1,79 @@
+<!doctype html>
+<html lang="he" dir="rtl">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>כלי חיתוך תוכניות</title>
+  <style>
+    body { font-family: Rubik, Arial, sans-serif; margin: 16px; background:#fafafa; }
+    h1 { font-size: 18px; }
+    .bar { margin-bottom: 10px; display:flex; gap:12px; align-items:center; flex-wrap:wrap; }
+    #wrap { position: relative; display:inline-block; border:1px solid #ccc; }
+    #img { display:block; max-width: 100%; height:auto; cursor: crosshair; user-select:none; }
+    #sel { position:absolute; border:2px solid #e53935; background:rgba(229,57,53,0.15); display:none; pointer-events:none; }
+    #out { margin-top:12px; font-family: monospace; font-size:14px; background:#fff; border:1px solid #ddd; padding:12px; border-radius:6px; white-space:pre-wrap; }
+    button, select { font-size:14px; padding:4px 8px; }
+    .hint { color:#666; font-size:13px; }
+  </style>
+</head>
+<body>
+  <h1>כלי חיתוך — גררו מלבן סביב הדירה/הקומה הרצויה</h1>
+  <div class="bar">
+    <label>גיליון:
+      <select id="pick">
+        <option value="images/plans/page1-full.jpg">page 1 (תוכניות/חתכים/הדמיות)</option>
+        <option value="images/plans/page2-full.jpg">page 2 (גיליון קומות)</option>
+        <option value="images/plans/page3-full.jpg">page 3 (חזיתות)</option>
+        <option value="images/plans/page6-full.jpg">page 6</option>
+        <option value="images/plans/page7-full.jpg">page 7 (קרקע)</option>
+        <option value="images/plans/page7rot-full.jpg">page 7 (מסובב 180°)</option>
+        <option value="images/plans/page8-full.jpg">page 8</option>
+      </select>
+    </label>
+    <label>שם לקרופ: <input id="name" value="typical" size="14"></label>
+    <button id="copy">העתק פקודה</button>
+    <span class="hint">גררו עם העכבר. אפשר לגרור כמה פעמים — האחרון קובע.</span>
+  </div>
+  <div id="wrap">
+    <img id="img" src="images/plans/page2-full.jpg" draggable="false">
+    <div id="sel"></div>
+  </div>
+  <div id="out">גררו מלבן כדי לקבל קואורדינטות…</div>
+
+<script>
+const img = document.getElementById('img');
+const sel = document.getElementById('sel');
+const out = document.getElementById('out');
+const pick = document.getElementById('pick');
+const nameEl = document.getElementById('name');
+let sx, sy, dragging=false, last=null;
+
+pick.onchange = () => { img.src = pick.value; out.textContent='גררו מלבן…'; sel.style.display='none'; };
+
+function pos(e){ const r=img.getBoundingClientRect(); return {x:(e.clientX-r.left), y:(e.clientY-r.top), r}; }
+
+img.addEventListener('mousedown', e=>{ dragging=true; const p=pos(e); sx=p.x; sy=p.y; sel.style.display='block'; });
+window.addEventListener('mousemove', e=>{
+  if(!dragging) return;
+  const p=pos(e); const x=Math.min(sx,p.x), y=Math.min(sy,p.y), w=Math.abs(p.x-sx), h=Math.abs(p.y-sy);
+  Object.assign(sel.style,{left:x+'px',top:y+'px',width:w+'px',height:h+'px'});
+});
+window.addEventListener('mouseup', e=>{
+  if(!dragging) return; dragging=false;
+  const p=pos(e); const dispW=img.clientWidth, dispH=img.clientHeight;
+  const x=Math.min(sx,p.x), y=Math.min(sy,p.y), w=Math.abs(p.x-sx), h=Math.abs(p.y-sy);
+  const fx=(x/dispW), fy=(y/dispH), fw=(w/dispW), fh=(h/dispH);
+  const natW=img.naturalWidth, natH=img.naturalHeight;
+  const px=Math.round(fx*natW), py=Math.round(fy*natH), pw=Math.round(fw*natW), ph=Math.round(fh*natH);
+  last = {sheet: pick.value, name: nameEl.value, fx:fx.toFixed(4), fy:fy.toFixed(4), fw:fw.toFixed(4), fh:fh.toFixed(4), px,py,pw,ph, natW, natH};
+  out.textContent =
+    'גיליון: '+pick.value+'\n'+
+    'שם: '+nameEl.value+'\n'+
+    'fractions: x='+last.fx+' y='+last.fy+' w='+last.fw+' h='+last.fh+'\n'+
+    'pixels(on '+natW+'x'+natH+'): x='+px+' y='+py+' w='+pw+' h='+ph+'\n\n'+
+    '>>> paste this to the assistant: CROP '+nameEl.value+' '+pick.value+' fx='+last.fx+' fy='+last.fy+' fw='+last.fw+' fh='+last.fh;
+});
+document.getElementById('copy').onclick=()=>{ if(last) navigator.clipboard.writeText(out.textContent.split('>>> ')[1]||out.textContent); };
+</script>
+</body>
+</html>

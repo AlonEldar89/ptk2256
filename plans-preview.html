@@ -1,0 +1,31 @@
+<!doctype html>
+<html lang="he" dir="rtl">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>תצוגת תוכניות — בדיקה</title>
+  <style>
+    body { font-family: Rubik, Arial, sans-serif; margin: 24px; background:#fafafa; }
+    h1 { font-size: 20px; }
+    .grid { display:grid; grid-template-columns: repeat(auto-fill, minmax(320px,1fr)); gap:20px; }
+    .card { background:#fff; border:1px solid #ddd; border-radius:8px; padding:10px; }
+    .card h2 { font-size:15px; margin:4px 0 8px; }
+    .card img { width:100%; height:auto; border:1px solid #eee; border-radius:4px; }
+    .note { color:#666; font-size:13px; }
+  </style>
+</head>
+<body>
+  <h1>בדיקת קרופים של תוכניות (מתוך קובץ ה‑DWF)</h1>
+  <p class="note">
+    אלו קרופים גולמיים מתוך גיליון התוכניות. אמרו לי איזה פאנל שייך לאיזו קומה/בניין,
+    ואיזה צריך חיתוך מדויק יותר. plate-a..d הם מגיליון הקומות; ground-sheet הוא תוכנית הקרקע (סובבה 180°).
+  </p>
+  <div class="grid">
+    <div class="card"><h2>plate-a</h2><img src="images/plans/plate-a.jpg"></div>
+    <div class="card"><h2>plate-b</h2><img src="images/plans/plate-b.jpg"></div>
+    <div class="card"><h2>plate-c (חשוד כטיפוסית)</h2><img src="images/plans/plate-c.jpg"></div>
+    <div class="card"><h2>plate-d</h2><img src="images/plans/plate-d.jpg"></div>
+    <div class="card"><h2>ground-sheet</h2><img src="images/plans/ground-sheet.jpg"></div>
+  </div>
+</body>
+</html>

@@ -1,0 +1,121 @@
+<!doctype html>
+<html lang="he" dir="rtl">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>חיתוך דירות מהתוכניות</title>
+  <style>
+    body { font-family: Rubik, Arial, sans-serif; margin: 16px; background:#fafafa; color:#222; }
+    h1 { font-size: 18px; }
+    .bar { margin-bottom: 10px; display:flex; gap:10px; align-items:center; flex-wrap:wrap; }
+    #wrap { position: relative; display:inline-block; border:1px solid #ccc; background:#fff; }
+    #img { display:block; max-width: 100%; height:auto; cursor: crosshair; user-select:none; }
+    #sel { position:absolute; border:2px solid #e53935; background:rgba(229,57,53,0.15); display:none; pointer-events:none; }
+    .codes { display:flex; gap:6px; flex-wrap:wrap; margin:8px 0; }
+    .chip { padding:4px 10px; border:1px solid #1976d2; color:#1976d2; border-radius:16px; cursor:pointer; font-size:13px; }
+    .chip.active { background:#1976d2; color:#fff; }
+    .chip.done { border-color:#2e7d32; color:#2e7d32; }
+    .chip.done.active { background:#2e7d32; color:#fff; }
+    button, select, input { font-size:14px; padding:5px 9px; }
+    #list { margin-top:12px; font-family: monospace; font-size:12px; background:#fff; border:1px solid #ddd; padding:12px; border-radius:6px; white-space:pre-wrap; max-height:240px; overflow:auto; }
+    .hint { color:#666; font-size:13px; }
+    .row { display:flex; gap:10px; align-items:center; flex-wrap:wrap; }
+  </style>
+</head>
+<body>
+  <h1>חיתוך דירות — גררו מלבן סביב כל דירה, בחרו את קוד הדירה, ולחצו "הוסף"</h1>
+  <div class="bar">
+    <label>קומה/גיליון:
+      <select id="pick"></select>
+    </label>
+    <span class="hint">גררו מלבן → בחרו קוד למטה → "הוסף דירה". עברו על כל הגיליונות.</span>
+  </div>
+  <div class="codes" id="codes"></div>
+  <div class="row" style="margin-bottom:8px;">
+    <span>קוד נבחר: <b id="cur">—</b></span>
+    <button id="add">➕ הוסף דירה</button>
+    <button id="undo">↩︎ בטל אחרון</button>
+    <button id="copy">📋 העתק הכל</button>
+    <span class="hint" id="count">0 חיתוכים</span>
+  </div>
+  <div id="wrap">
+    <img id="img" draggable="false">
+    <div id="sel"></div>
+  </div>
+  <div id="list">אין חיתוכים עדיין…</div>
+
+<script>
+const SHEETS = [
+  {label:'A1 · קרקע',           file:'A1Ground.png', b:'A1', band:'ground',        codes:['A1-E']},
+  {label:'A1 · טיפוסית 1-7',    file:'A1-1-7.png',   b:'A1', band:'typical-1-7',   codes:['A','B',"B'",'C',"C'"]},
+  {label:'A1 · קומה 8',         file:'A18.png',      b:'A1', band:'floor-8',        codes:['A-PA','A-PB']},
+  {label:'A1 · קומה 9',         file:'A1-9.png',     b:'A1', band:'floor-9',        codes:['A-PC',"A-PC'"]},
+  {label:'A2 · קרקע',           file:'A2Ground.png', b:'A2', band:'ground',        codes:['A2-E',"A2-E'"]},
+  {label:'A2 · טיפוסית 1-7',    file:'A2-1-7.png',   b:'A2', band:'typical-1-7',   codes:['A','B',"B'",'C',"C'"]},
+  {label:'A2 · קומה 8',         file:'A2-8.png',     b:'A2', band:'floor-8',        codes:['A-PA','A-PB']},
+  {label:'A2 · קומה 9',         file:'A2-9.png',     b:'A2', band:'floor-9',        codes:['A-PC',"A-PC'"]},
+  {label:'B · קרקע',            file:'BGround.png',  b:'B',  band:'ground',        codes:['B-E',"B-E'"]},
+  {label:'B · טיפוסית 1-7',     file:'B1-7.png',     b:'B',  band:'typical-1-7',   codes:['A','B',"B'",'C','C*']},
+  {label:'B · קומה 8',          file:'B8.png',       b:'B',  band:'floor-8',        codes:['B-PA','B-PB']},
+  {label:'B · קומה 9',          file:'B9.png',       b:'B',  band:'floor-9',        codes:['B-PC']},
+  {label:'מגדל C · קומה 1',     file:'C1stFloor.png',b:'C',  band:'floor-1',        codes:['A1','C1','D','E','F1']},
+  {label:'מגדל C · טיפוסית 2-12',file:'C2-12.png',   b:'C',  band:'typical-2-12',   codes:['A','B','C','D','E','F']},
+  {label:'מגדל C · טיפוסית 13-19',file:'C13-19.png', b:'C',  band:'typical-13-19',  codes:['G','H','I','J']},
+  {label:'מגדל C · קומה 20',    file:'C20.png',      b:'C',  band:'floor-20',       codes:['C-PA','C-PB']},
+];
+const BASE='images/plans/floors/';
+const img=document.getElementById('img'), sel=document.getElementById('sel');
+const pick=document.getElementById('pick'), codesEl=document.getElementById('codes');
+const curEl=document.getElementById('cur'), listEl=document.getElementById('list'), countEl=document.getElementById('count');
+let crops=[], curCode=null, sx,sy,dragging=false, lastSel=null;
+
+SHEETS.forEach((s,i)=>{ const o=document.createElement('option'); o.value=i; o.textContent=s.label; pick.appendChild(o); });
+
+function sheet(){ return SHEETS[+pick.value]; }
+function loadSheet(){
+  const s=sheet(); img.src=BASE+s.file; curCode=null; curEl.textContent='—'; sel.style.display='none'; lastSel=null;
+  renderCodes();
+}
+function doneCodes(){ const s=sheet(); return new Set(crops.filter(c=>c.b===s.b&&c.band===s.band).map(c=>c.code)); }
+function renderCodes(){
+  const s=sheet(), done=doneCodes(); codesEl.innerHTML='';
+  s.codes.forEach(code=>{
+    const el=document.createElement('span');
+    el.className='chip'+(done.has(code)?' done':'')+(code===curCode?' active':'');
+    el.textContent=code+(done.has(code)?' ✓':'');
+    el.onclick=()=>{ curCode=code; curEl.textContent=code; renderCodes(); };
+    codesEl.appendChild(el);
+  });
+}
+pick.onchange=loadSheet;
+
+function pos(e){ const r=img.getBoundingClientRect(); return {x:e.clientX-r.left, y:e.clientY-r.top}; }
+img.addEventListener('mousedown',e=>{ dragging=true; const p=pos(e); sx=p.x; sy=p.y; sel.style.display='block'; });
+window.addEventListener('mousemove',e=>{ if(!dragging)return; const p=pos(e);
+  const x=Math.min(sx,p.x),y=Math.min(sy,p.y),w=Math.abs(p.x-sx),h=Math.abs(p.y-sy);
+  Object.assign(sel.style,{left:x+'px',top:y+'px',width:w+'px',height:h+'px'}); });
+window.addEventListener('mouseup',e=>{ if(!dragging)return; dragging=false; const p=pos(e);
+  const dispW=img.clientWidth,dispH=img.clientHeight;
+  const x=Math.min(sx,p.x),y=Math.min(sy,p.y),w=Math.abs(p.x-sx),h=Math.abs(p.y-sy);
+  lastSel={fx:x/dispW, fy:y/dispH, fw:w/dispW, fh:h/dispH}; });
+
+document.getElementById('add').onclick=()=>{
+  if(!curCode){ alert('בחרו קוד דירה'); return; }
+  if(!lastSel){ alert('גררו מלבן קודם'); return; }
+  const s=sheet();
+  crops=crops.filter(c=>!(c.b===s.b&&c.band===s.band&&c.code===curCode)); // replace if re-cropped
+  crops.push({b:s.b, band:s.band, code:curCode, file:s.file, ...lastSel});
+  lastSel=null; sel.style.display='none'; renderCodes(); renderList();
+};
+document.getElementById('undo').onclick=()=>{ crops.pop(); renderCodes(); renderList(); };
+function renderList(){
+  countEl.textContent=crops.length+' חיתוכים';
+  listEl.textContent = crops.map(c=>
+    `CROP|${c.b}|${c.band}|${c.code}|${c.file}|${c.fx.toFixed(4)}|${c.fy.toFixed(4)}|${c.fw.toFixed(4)}|${c.fh.toFixed(4)}`
+  ).join('\n') || 'אין חיתוכים עדיין…';
+}
+document.getElementById('copy').onclick=()=>{ navigator.clipboard.writeText(listEl.textContent); };
+loadSheet();
+</script>
+</body>
+</html>
